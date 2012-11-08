@@ -417,9 +417,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
             , self.originalContentInset.bottom
             , self.originalContentInset.right)];
         _ignoreInset = NO;
-
-        offset.y = -kOpenedViewHeight;
-        [self.scrollView setContentOffset:offset animated:YES];
+        [self.scrollView setContentOffset:offset animated:NO];
 
         self.refreshing = YES;
         _canRefresh = NO;
