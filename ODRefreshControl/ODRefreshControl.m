@@ -411,7 +411,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         _activity.layer.transform = CATransform3DMakeScale(1, 1, 1);
 
         CGPoint offset = self.scrollView.contentOffset;
-        if (offset < 0) {
+        if (offset.y < 0) {
             _ignoreInset = YES;
             [self.scrollView setContentInset:UIEdgeInsetsMake(kOpenedViewHeight + self.originalContentInset.top
                 , self.originalContentInset.left
