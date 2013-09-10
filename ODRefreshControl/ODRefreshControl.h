@@ -23,12 +23,19 @@
     BOOL _didSetInset;
     BOOL _hasSectionHeaders;
     CGFloat _lastOffset;
+	BOOL _stayAtInsetTop;
 }
 
 @property (nonatomic, readonly) BOOL refreshing;
 @property (nonatomic, strong) UIColor *tintColor;
 @property (nonatomic, assign) UIActivityIndicatorViewStyle activityIndicatorViewStyle;
 @property (nonatomic, strong) UIColor *activityIndicatorViewColor; // iOS5 or more
+
+/** 
+ * YES, to position the bottom edge of control at the top of contentInsets.
+ * Handy when the top part of the scroll view is actually obscured by something (and thus has content inset). 
+ */
+@property (nonatomic, readwrite, getter = shouldStayAtInsetTop) BOOL stayAtInsetTop;
 
 - (id)initInScrollView:(UIScrollView *)scrollView;
 
