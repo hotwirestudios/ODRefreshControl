@@ -24,7 +24,7 @@
 #define kMaxArrowSize       3
 #define kMinArrowRadius     5
 #define kMaxArrowRadius     7
-#define kMaxDistance        53
+#define kMaxDistance        34
 
 @interface ODRefreshControl ()
 
@@ -42,6 +42,8 @@
 @synthesize scrollView = _scrollView;
 @synthesize originalContentInset = _originalContentInset;
 
+@synthesize stayAtInsetTop = _stayAtInsetTop;
+
 static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 {
     return a + (b - a) * p;
@@ -51,13 +53,21 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
     return [self initInScrollView:scrollView activityIndicatorView:nil];
 }
 
+- (CGRect)controlFrame {
+	if (_stayAtInsetTop)
+		return CGRectMake(0, -(kTotalViewHeight), self.scrollView.frame.size.width, kTotalViewHeight);
+	else
+		return CGRectMake(0, -(kTotalViewHeight + self.scrollView.contentInset.top), self.scrollView.frame.size.width, kTotalViewHeight);
+}
+
 - (id)initInScrollView:(UIScrollView *)scrollView activityIndicatorView:(UIView *)activity
 {
-    self = [super initWithFrame:CGRectMake(0, -(kTotalViewHeight + scrollView.contentInset.top), scrollView.frame.size.width, kTotalViewHeight)];
-    
-    if (self) {
+    if (self = [super initWithFrame:CGRectZero]) {
+
         self.scrollView = scrollView;
         self.originalContentInset = scrollView.contentInset;
+
+		self.frame = [self controlFrame];
         
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         [scrollView addSubview:self];
@@ -163,12 +173,17 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
     return nil;
 }
 
+- (void)setStayAtInsetTop:(BOOL)stayAtInsetTop {
+	_stayAtInsetTop = stayAtInsetTop;
+	self.frame = [self controlFrame];
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if ([keyPath isEqualToString:@"contentInset"]) {
         if (!_ignoreInset) {
             self.originalContentInset = [[change objectForKey:@"new"] UIEdgeInsetsValue];
-            self.frame = CGRectMake(0, -(kTotalViewHeight + self.scrollView.contentInset.top), self.scrollView.frame.size.width, kTotalViewHeight);
+			self.frame = [self controlFrame];
         }
         return;
     }
@@ -411,11 +426,16 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         _activity.layer.transform = CATransform3DMakeScale(1, 1, 1);
 
         CGPoint offset = self.scrollView.contentOffset;
-        _ignoreInset = YES;
-        [self.scrollView setContentInset:UIEdgeInsetsMake(kOpenedViewHeight + self.originalContentInset.top, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right)];
-        _ignoreInset = NO;
-        [self.scrollView setContentOffset:offset animated:NO];
-
+        if (offset.y < 0) {
+            _ignoreInset = YES;
+            [self.scrollView setContentInset:UIEdgeInsetsMake(kOpenedViewHeight + self.originalContentInset.top
+                , self.originalContentInset.left
+                , self.originalContentInset.bottom
+                , self.originalContentInset.right)];
+            _ignoreInset = NO;
+            [self.scrollView setContentOffset:offset animated:YES]; 
+        }
+        
         self.refreshing = YES;
         _canRefresh = NO;
     }
