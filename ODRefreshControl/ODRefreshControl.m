@@ -55,7 +55,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 
 - (CGRect)controlFrame {
 	if (_stayAtInsetTop)
-		return CGRectMake(0, -(kTotalViewHeight), self.scrollView.frame.size.width, kTotalViewHeight);
+		return CGRectMake(0, -(kTotalViewHeight + self.bottomPadding), self.scrollView.frame.size.width, kTotalViewHeight);
 	else
 		return CGRectMake(0, -(kTotalViewHeight + self.scrollView.contentInset.top), self.scrollView.frame.size.width, kTotalViewHeight);
 }
@@ -63,10 +63,10 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 - (id)initInScrollView:(UIScrollView *)scrollView activityIndicatorView:(UIView *)activity
 {
     if (self = [super initWithFrame:CGRectZero]) {
-
+        
         self.scrollView = scrollView;
         self.originalContentInset = scrollView.contentInset;
-
+        
 		self.frame = [self controlFrame];
         
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -191,7 +191,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
     if (!self.enabled || _ignoreOffset) {
         return;
     }
-
+    
     CGFloat offset = [[change objectForKey:@"new"] CGPointValue].y + self.originalContentInset.top;
     
     if (_refreshing) {
@@ -202,9 +202,9 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
             [CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
             _shapeLayer.position = CGPointMake(0, kMaxDistance + offset + kOpenedViewHeight);
             [CATransaction commit];
-
+            
             _activity.center = CGPointMake(floor(self.frame.size.width / 2), MIN(offset + self.frame.size.height + floor(kOpenedViewHeight / 2), self.frame.size.height - kOpenedViewHeight/ 2));
-
+            
             _ignoreInset = YES;
             _ignoreOffset = YES;
             
@@ -424,16 +424,16 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         
         _activity.alpha = 1;
         _activity.layer.transform = CATransform3DMakeScale(1, 1, 1);
-
+        
         CGPoint offset = self.scrollView.contentOffset;
         if (offset.y < 0) {
             _ignoreInset = YES;
             [self.scrollView setContentInset:UIEdgeInsetsMake(kOpenedViewHeight + self.originalContentInset.top
-                , self.originalContentInset.left
-                , self.originalContentInset.bottom
-                , self.originalContentInset.right)];
+                                                              , self.originalContentInset.left
+                                                              , self.originalContentInset.bottom
+                                                              , self.originalContentInset.right)];
             _ignoreInset = NO;
-            [self.scrollView setContentOffset:offset animated:YES]; 
+            [self.scrollView setContentOffset:offset animated:YES];
         }
         
         self.refreshing = YES;

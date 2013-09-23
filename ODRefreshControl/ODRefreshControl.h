@@ -26,23 +26,18 @@
 	BOOL _stayAtInsetTop;
 }
 
-@property (nonatomic, readonly, getter=isRefreshing) BOOL refreshing;
+@property (nonatomic, readonly) BOOL refreshing;
+@property (nonatomic) UIColor *tintColor;
+@property (nonatomic) UIActivityIndicatorViewStyle activityIndicatorViewStyle;
+@property (nonatomic) UIColor *activityIndicatorViewColor; // iOS5 or more
 
-#ifdef __IPHONE_5_0
-@property (nonatomic, strong) UIColor *tintColor UI_APPEARANCE_SELECTOR;
-@property (nonatomic, assign) UIActivityIndicatorViewStyle activityIndicatorViewStyle UI_APPEARANCE_SELECTOR;
-@property (nonatomic, strong) UIColor *activityIndicatorViewColor UI_APPEARANCE_SELECTOR; // iOS5 or more
-#else
-@property (nonatomic, strong) UIColor *tintColor;
-@property (nonatomic, assign) UIActivityIndicatorViewStyle activityIndicatorViewStyle;
-@property (nonatomic, strong) UIColor *activityIndicatorViewColor; // iOS5 or more
-#endif
-
-/** 
+/**
  * YES, to position the bottom edge of control at the top of contentInsets.
- * Handy when the top part of the scroll view is actually obscured by something (and thus has content inset). 
+ * Handy when the top part of the scroll view is actually obscured by something (and thus has content inset).
  */
-@property (nonatomic, readwrite, getter = shouldStayAtInsetTop) BOOL stayAtInsetTop;
+@property (nonatomic, getter = shouldStayAtInsetTop) BOOL stayAtInsetTop;
+/** Regulates control bottom margin in case `stayAtInsetTop` is enabled. */
+@property (nonatomic) CGFloat bottomPadding;
 
 - (id)initInScrollView:(UIScrollView *)scrollView;
 
