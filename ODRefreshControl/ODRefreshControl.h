@@ -27,9 +27,9 @@
 }
 
 @property (nonatomic, readonly) BOOL refreshing;
-@property (nonatomic) UIColor *tintColor;
+@property (nonatomic, strong) UIColor *tintColor;
 @property (nonatomic) UIActivityIndicatorViewStyle activityIndicatorViewStyle;
-@property (nonatomic) UIColor *activityIndicatorViewColor; // iOS5 or more
+@property (nonatomic, strong) UIColor *activityIndicatorViewColor; // iOS5 or more
 
 /**
  * YES, to position the bottom edge of control at the top of contentInsets.
