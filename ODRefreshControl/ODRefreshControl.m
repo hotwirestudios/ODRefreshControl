@@ -63,7 +63,11 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 - (id)initInScrollView:(UIScrollView *)scrollView activityIndicatorView:(UIView *)activity
 {
     if (self = [super initWithFrame:CGRectZero]) {
-        
+
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillChange) name:UIKeyboardWillHideNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidChange) name:UIKeyboardDidHideNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillChange) name:UIKeyboardWillShowNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidChange) name:UIKeyboardDidShowNotification object:nil];
         self.scrollView = scrollView;
         self.originalContentInset = scrollView.contentInset;
         
@@ -114,8 +118,21 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
     return self;
 }
 
+- (void)keyboardWillChange
+{
+    [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
+    [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
+}
+
+- (void)keyboardDidChange
+{
+    [self.scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
+    [self.scrollView addObserver:self forKeyPath:@"contentInset" options:NSKeyValueObservingOptionNew context:nil];
+}
+
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
     [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
     self.scrollView = nil;
