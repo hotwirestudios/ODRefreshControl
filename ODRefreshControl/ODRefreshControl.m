@@ -133,8 +133,12 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
-    [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
+    @try {
+        [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
+        [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
+    } @catch (NSException *e) {
+        // nothing
+    }
     self.scrollView = nil;
 }
 
@@ -148,8 +152,12 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 {
     [super willMoveToSuperview:newSuperview];
     if (!newSuperview) {
-        [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
-        [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
+        @try {
+            [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
+            [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
+        } @catch (NSException *e) {
+            // nothing
+        }
         self.scrollView = nil;
     }
 }
