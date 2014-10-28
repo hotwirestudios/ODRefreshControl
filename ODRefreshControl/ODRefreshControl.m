@@ -44,20 +44,22 @@
 
 @synthesize stayAtInsetTop = _stayAtInsetTop;
 
-static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
-{
+static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p) {
     return a + (b - a) * p;
 }
 
-- (id)initInScrollView:(UIScrollView *)scrollView {
+- (id)initInScrollView:(UIScrollView *)scrollView
+{
     return [self initInScrollView:scrollView activityIndicatorView:nil];
 }
 
-- (CGRect)controlFrame {
-	if (_stayAtInsetTop)
-		return CGRectMake(0, -(kTotalViewHeight + self.bottomPadding), self.scrollView.frame.size.width, kTotalViewHeight);
-	else
-		return CGRectMake(0, -(kTotalViewHeight + self.scrollView.contentInset.top), self.scrollView.frame.size.width, kTotalViewHeight);
+- (CGRect)controlFrame
+{
+    if (_stayAtInsetTop) {
+        return CGRectMake(0, -(kTotalViewHeight + self.bottomPadding), self.scrollView.frame.size.width, kTotalViewHeight);
+    } else {
+        return CGRectMake(0, -(kTotalViewHeight + self.scrollView.contentInset.top), self.scrollView.frame.size.width, kTotalViewHeight);
+    }
 }
 
 - (id)initInScrollView:(UIScrollView *)scrollView activityIndicatorView:(UIView *)activity
@@ -70,14 +72,14 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidChange) name:UIKeyboardDidShowNotification object:nil];
         self.scrollView = scrollView;
         self.originalContentInset = scrollView.contentInset;
-        
-		self.frame = [self controlFrame];
-        
+
+        self.frame = [self controlFrame];
+
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         [scrollView addSubview:self];
         [scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
         [scrollView addObserver:self forKeyPath:@"contentInset" options:NSKeyValueObservingOptionNew context:nil];
-        
+
         _activity = activity ? activity : [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
         _activity.center = CGPointMake(floor(self.frame.size.width / 2), floor(self.frame.size.height / 2));
         _activity.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -86,7 +88,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
             [(UIActivityIndicatorView *)_activity startAnimating];
         }
         [self addSubview:_activity];
-        
+
         _refreshing = NO;
         _canRefresh = YES;
         _ignoreInset = NO;
@@ -94,7 +96,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         _didSetInset = NO;
         _hasSectionHeaders = NO;
         _tintColor = [UIColor colorWithRed:155.0 / 255.0 green:162.0 / 255.0 blue:172.0 / 255.0 alpha:1.0];
-        
+
         _shapeLayer = [CAShapeLayer layer];
         _shapeLayer.fillColor = [_tintColor CGColor];
         _shapeLayer.strokeColor = [[[UIColor darkGrayColor] colorWithAlphaComponent:0.5] CGColor];
@@ -104,13 +106,13 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         _shapeLayer.shadowOpacity = 0.4;
         _shapeLayer.shadowRadius = 0.5;
         [self.layer addSublayer:_shapeLayer];
-        
+
         _arrowLayer = [CAShapeLayer layer];
         _arrowLayer.strokeColor = [[[UIColor darkGrayColor] colorWithAlphaComponent:0.5] CGColor];
         _arrowLayer.lineWidth = 0.5;
         _arrowLayer.fillColor = [[UIColor whiteColor] CGColor];
         [_shapeLayer addSublayer:_arrowLayer];
-        
+
         _highlightLayer = [CAShapeLayer layer];
         _highlightLayer.fillColor = [[[UIColor whiteColor] colorWithAlphaComponent:0.2] CGColor];
         [_shapeLayer addSublayer:_highlightLayer];
@@ -120,25 +122,18 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 
 - (void)keyboardWillChange
 {
-    [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
-    [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
+    [self stopKeyValueObserving];
 }
 
 - (void)keyboardDidChange
 {
-    [self.scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
-    [self.scrollView addObserver:self forKeyPath:@"contentInset" options:NSKeyValueObservingOptionNew context:nil];
+    [self startKeyValueObserving];
 }
 
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    @try {
-        [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
-        [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
-    } @catch (NSException *e) {
-        // nothing
-    }
+    [self stopKeyValueObserving];
     self.scrollView = nil;
 }
 
@@ -152,12 +147,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
 {
     [super willMoveToSuperview:newSuperview];
     if (!newSuperview) {
-        @try {
-            [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
-            [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
-        } @catch (NSException *e) {
-            // nothing
-        }
+        [self stopKeyValueObserving];
         self.scrollView = nil;
     }
 }
@@ -198,9 +188,10 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
     return nil;
 }
 
-- (void)setStayAtInsetTop:(BOOL)stayAtInsetTop {
-	_stayAtInsetTop = stayAtInsetTop;
-	self.frame = [self controlFrame];
+- (void)setStayAtInsetTop:(BOOL)stayAtInsetTop
+{
+    _stayAtInsetTop = stayAtInsetTop;
+    self.frame = [self controlFrame];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -208,31 +199,31 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
     if ([keyPath isEqualToString:@"contentInset"]) {
         if (!_ignoreInset) {
             self.originalContentInset = [[change objectForKey:@"new"] UIEdgeInsetsValue];
-			self.frame = [self controlFrame];
+            self.frame = [self controlFrame];
         }
         return;
     }
-    
+
     if (!self.enabled || _ignoreOffset) {
         return;
     }
-    
+
     CGFloat offset = [[change objectForKey:@"new"] CGPointValue].y + self.originalContentInset.top;
-    
+
     if (_refreshing) {
         if (offset != 0) {
             // Keep thing pinned at the top
-            
+
             [CATransaction begin];
             [CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
             _shapeLayer.position = CGPointMake(0, kMaxDistance + offset + kOpenedViewHeight);
             [CATransaction commit];
-            
-            _activity.center = CGPointMake(floor(self.frame.size.width / 2), MIN(offset + self.frame.size.height + floor(kOpenedViewHeight / 2), self.frame.size.height - kOpenedViewHeight/ 2));
-            
+
+            _activity.center = CGPointMake(floor(self.frame.size.width / 2), MIN(offset + self.frame.size.height + floor(kOpenedViewHeight / 2), self.frame.size.height - kOpenedViewHeight / 2));
+
             _ignoreInset = YES;
             _ignoreOffset = YES;
-            
+
             if (offset < 0) {
                 // Set the inset depending on the situation
                 if (offset >= -kOpenedViewHeight) {
@@ -240,7 +231,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
                         if (!_didSetInset) {
                             _didSetInset = YES;
                             _hasSectionHeaders = NO;
-                            if([self.scrollView isKindOfClass:[UITableView class]]){
+                            if ([self.scrollView isKindOfClass:[UITableView class]]) {
                                 for (int i = 0; i < [(UITableView *)self.scrollView numberOfSections]; ++i) {
                                     if ([(UITableView *)self.scrollView rectForHeaderInSection:i].size.height) {
                                         _hasSectionHeaders = YES;
@@ -296,24 +287,24 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
             return;
         }
     }
-    
+
     _lastOffset = offset;
-    
+
     BOOL triggered = NO;
-    
+
     CGMutablePathRef path = CGPathCreateMutable();
-    
+
     //Calculate some useful points and values
     CGFloat verticalShift = MAX(0, -((kMaxTopRadius + kMaxBottomRadius + kMaxTopPadding + kMaxBottomPadding) + offset));
     CGFloat distance = MIN(kMaxDistance, fabs(verticalShift));
     CGFloat percentage = 1 - (distance / kMaxDistance);
-    
+
     CGFloat currentTopPadding = lerp(kMinTopPadding, kMaxTopPadding, percentage);
     CGFloat currentTopRadius = lerp(kMinTopRadius, kMaxTopRadius, percentage);
     CGFloat currentBottomRadius = lerp(kMinBottomRadius, kMaxBottomRadius, percentage);
-    CGFloat currentBottomPadding =  lerp(kMinBottomPadding, kMaxBottomPadding, percentage);
-    
-    CGPoint bottomOrigin = CGPointMake(floor(self.bounds.size.width / 2), self.bounds.size.height - currentBottomPadding -currentBottomRadius);
+    CGFloat currentBottomPadding = lerp(kMinBottomPadding, kMaxBottomPadding, percentage);
+
+    CGPoint bottomOrigin = CGPointMake(floor(self.bounds.size.width / 2), self.bounds.size.height - currentBottomPadding - currentBottomRadius);
     CGPoint topOrigin = CGPointZero;
     if (distance == 0) {
         topOrigin = CGPointMake(floor(self.bounds.size.width / 2), bottomOrigin.y);
@@ -324,36 +315,36 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
             triggered = YES;
         }
     }
-    
+
     //Top semicircle
     CGPathAddArc(path, NULL, topOrigin.x, topOrigin.y, currentTopRadius, 0, M_PI, YES);
-    
+
     //Left curve
     CGPoint leftCp1 = CGPointMake(lerp((topOrigin.x - currentTopRadius), (bottomOrigin.x - currentBottomRadius), 0.1), lerp(topOrigin.y, bottomOrigin.y, 0.2));
     CGPoint leftCp2 = CGPointMake(lerp((topOrigin.x - currentTopRadius), (bottomOrigin.x - currentBottomRadius), 0.9), lerp(topOrigin.y, bottomOrigin.y, 0.2));
     CGPoint leftDestination = CGPointMake(bottomOrigin.x - currentBottomRadius, bottomOrigin.y);
-    
+
     CGPathAddCurveToPoint(path, NULL, leftCp1.x, leftCp1.y, leftCp2.x, leftCp2.y, leftDestination.x, leftDestination.y);
-    
+
     //Bottom semicircle
     CGPathAddArc(path, NULL, bottomOrigin.x, bottomOrigin.y, currentBottomRadius, M_PI, 0, YES);
-    
+
     //Right curve
     CGPoint rightCp2 = CGPointMake(lerp((topOrigin.x + currentTopRadius), (bottomOrigin.x + currentBottomRadius), 0.1), lerp(topOrigin.y, bottomOrigin.y, 0.2));
     CGPoint rightCp1 = CGPointMake(lerp((topOrigin.x + currentTopRadius), (bottomOrigin.x + currentBottomRadius), 0.9), lerp(topOrigin.y, bottomOrigin.y, 0.2));
     CGPoint rightDestination = CGPointMake(topOrigin.x + currentTopRadius, topOrigin.y);
-    
+
     CGPathAddCurveToPoint(path, NULL, rightCp1.x, rightCp1.y, rightCp2.x, rightCp2.y, rightDestination.x, rightDestination.y);
     CGPathCloseSubpath(path);
-    
+
     if (!triggered) {
         // Set paths
-        
+
         _shapeLayer.path = path;
         _shapeLayer.shadowPath = path;
-        
+
         // Add the arrow shape
-        
+
         CGFloat currentArrowSize = lerp(kMinArrowSize, kMaxArrowSize, percentage);
         CGFloat currentArrowRadius = lerp(kMinArrowRadius, kMaxArrowRadius, percentage);
         CGFloat arrowBigRadius = currentArrowRadius + (currentArrowSize / 2);
@@ -369,20 +360,19 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         _arrowLayer.path = arrowPath;
         [_arrowLayer setFillRule:kCAFillRuleEvenOdd];
         CGPathRelease(arrowPath);
-        
+
         // Add the highlight shape
-        
+
         CGMutablePathRef highlightPath = CGPathCreateMutable();
         CGPathAddArc(highlightPath, NULL, topOrigin.x, topOrigin.y, currentTopRadius, 0, M_PI, YES);
         CGPathAddArc(highlightPath, NULL, topOrigin.x, topOrigin.y + 1.25, currentTopRadius, M_PI, 0, NO);
-        
+
         _highlightLayer.path = highlightPath;
         [_highlightLayer setFillRule:kCAFillRuleNonZero];
         CGPathRelease(highlightPath);
-        
     } else {
         // Start the shape disappearance animation
-        
+
         CGFloat radius = lerp(kMinBottomRadius, kMaxBottomRadius, 0.2);
         CABasicAnimation *pathMorph = [CABasicAnimation animationWithKeyPath:@"path"];
         pathMorph.duration = 0.15;
@@ -417,7 +407,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         alphaAnimation.removedOnCompletion = NO;
         [_arrowLayer addAnimation:alphaAnimation forKey:nil];
         [_highlightLayer addAnimation:alphaAnimation forKey:nil];
-        
+
         [CATransaction begin];
         [CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
         _activity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
@@ -425,13 +415,13 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         [UIView animateWithDuration:0.2 delay:0.15 options:UIViewAnimationOptionCurveLinear animations:^{
             _activity.alpha = 1;
             _activity.layer.transform = CATransform3DMakeScale(1, 1, 1);
-        } completion:nil];
-        
+        }                completion:nil];
+
         self.refreshing = YES;
         _canRefresh = NO;
         [self sendActionsForControlEvents:UIControlEventValueChanged];
     }
-    
+
     CGPathRelease(path);
 }
 
@@ -446,21 +436,18 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
         [_shapeLayer addAnimation:alphaAnimation forKey:nil];
         [_arrowLayer addAnimation:alphaAnimation forKey:nil];
         [_highlightLayer addAnimation:alphaAnimation forKey:nil];
-        
+
         _activity.alpha = 1;
         _activity.layer.transform = CATransform3DMakeScale(1, 1, 1);
-        
+
         CGPoint offset = self.scrollView.contentOffset;
         if (offset.y < 0) {
             _ignoreInset = YES;
-            [self.scrollView setContentInset:UIEdgeInsetsMake(kOpenedViewHeight + self.originalContentInset.top
-                                                              , self.originalContentInset.left
-                                                              , self.originalContentInset.bottom
-                                                              , self.originalContentInset.right)];
+            [self.scrollView setContentInset:UIEdgeInsetsMake(kOpenedViewHeight + self.originalContentInset.top, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right)];
             _ignoreInset = NO;
             [self.scrollView setContentOffset:offset animated:YES];
         }
-        
+
         self.refreshing = YES;
         _canRefresh = NO;
     }
@@ -481,7 +468,7 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
             _ignoreInset = NO;
             _activity.alpha = 0;
             _activity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
-        } completion:^(BOOL finished) {
+        }                completion:^(BOOL finished) {
             [_shapeLayer removeAllAnimations];
             _shapeLayer.path = nil;
             _shapeLayer.shadowPath = nil;
@@ -496,6 +483,24 @@ static inline CGFloat lerp(CGFloat a, CGFloat b, CGFloat p)
             [blockScrollView setContentInset:self.originalContentInset];
             _ignoreInset = NO;
         }];
+    }
+}
+
+- (void)startKeyValueObserving
+{
+    [self stopKeyValueObserving];
+
+    [self.scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
+    [self.scrollView addObserver:self forKeyPath:@"contentInset" options:NSKeyValueObservingOptionNew context:nil];
+}
+
+- (void)stopKeyValueObserving
+{
+    @try {
+        [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
+        [self.scrollView removeObserver:self forKeyPath:@"contentInset"];
+    } @catch (NSException *e) {
+        // nothing
     }
 }
 

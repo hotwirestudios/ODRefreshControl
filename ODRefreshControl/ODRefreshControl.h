@@ -50,4 +50,7 @@
 // Tells the control the refresh operation has ended
 - (void)endRefreshing;
 
+- (void)startKeyValueObserving;
+- (void)stopKeyValueObserving;
+
 @end
